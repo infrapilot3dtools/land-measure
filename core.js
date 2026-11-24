@@ -167,6 +167,131 @@
     return { m2, feddan: f, qirat: q, sahm: s };
   }
 
-  const api = { solve, area, formatArea, FEDDAN, QIRAT, SAHM };
+
+  // ---------- v2: GPS / AR / RTK points + weighted combination ----------
+  function llToLocal(pts, origin) {
+    const R = 6378137, k = Math.PI / 180, c = Math.cos(origin.lat * k);
+    return pts.map(p => [R * (p.lon - origin.lon) * k * c, R * (p.lat - origin.lat) * k]);
+  }
+  // Average several GPS fixes of one corner. Honest sigma: errors of consecutive
+  // fixes are strongly correlated, so averaging is NOT credited with sqrt(N) gain.
+  function averageFixes(fixes) {
+    const f = fixes.filter(x => isFinite(x.acc) && x.acc > 0 && isFinite(x.lat) && isFinite(x.lon));
+    if (!f.length) return null;
+    const w = f.map(x => 1 / (x.acc * x.acc)), sw = w.reduce((a, b) => a + b, 0);
+    const lat = f.reduce((a, x, i) => a + w[i] * x.lat, 0) / sw;
+    const lon = f.reduce((a, x, i) => a + w[i] * x.lon, 0) / sw;
+    const loc = llToLocal(f, { lat, lon });
+    const scatter = Math.sqrt(loc.reduce((a, p) => a + p[0] * p[0] + p[1] * p[1], 0) / loc.length / 2);
+    const accs = f.map(x => x.acc).sort((a, b) => a - b);
+    const med = accs[Math.floor(accs.length / 2)];
+    return { lat, lon, n: f.length, scatter, medianAcc: med, sigma: Math.max(med, scatter) };
+  }
+  function signedArea(P) {
+    let s = 0;
+    for (let i = 0; i < P.length; i++) { const j = (i + 1) % P.length; s += P[i][0] * P[j][1] - P[j][0] * P[i][1]; }
+    return s / 2;
+  }
+  function alignShape(shape, priors) {
+    const wsum = priors.reduce((a, p) => a + 1 / (p.sigma * p.sigma), 0);
+    const cp = [priors.reduce((a, p) => a + p.x / (p.sigma * p.sigma), 0) / wsum, priors.reduce((a, p) => a + p.y / (p.sigma * p.sigma), 0) / wsum];
+    if (priors.length === 1) {
+      const p = priors[0], q = shape[p.i];
+      return shape.map(v => [v[0] - q[0] + p.x, v[1] - q[1] + p.y]);
+    }
+    let best = null;
+    for (const mir of [false, true]) {
+      const Q = shape.map(v => [mir ? -v[0] : v[0], v[1]]);
+      const cq = [priors.reduce((a, p) => a + Q[p.i][0] / (p.sigma * p.sigma), 0) / wsum, priors.reduce((a, p) => a + Q[p.i][1] / (p.sigma * p.sigma), 0) / wsum];
+      let a = 0, b = 0;
+      for (const p of priors) {
+        const w = 1 / (p.sigma * p.sigma), qx = Q[p.i][0] - cq[0], qy = Q[p.i][1] - cq[1], px = p.x - cp[0], py = p.y - cp[1];
+        a += w * (qx * px + qy * py); b += w * (qx * py - qy * px);
+      }
+      const th = Math.atan2(b, a), c = Math.cos(th), sn = Math.sin(th);
+      const R = Q.map(v => { const x = v[0] - cq[0], y = v[1] - cq[1]; return [c * x - sn * y + cp[0], sn * x + c * y + cp[1]]; });
+      const cost = priors.reduce((s2, p) => s2 + ((R[p.i][0] - p.x) ** 2 + (R[p.i][1] - p.y) ** 2) / (p.sigma * p.sigma), 0);
+      if (!best || cost < best.cost) best = { R, cost };
+    }
+    return best.R;
+  }
+
+  // dists: [{i,j,d,sigma}] meters; priors: [{i,x,y,sigma}] local meters (GPS/RTK).
+  function solveCombined(n, dists, priors) {
+    priors = priors || [];
+    const dof0 = 2 * n - 3;
+    let P = null;
+    if (dists.length >= dof0) {
+      const s0 = solve(n, dists.map(m => ({ i: m.i, j: m.j, d: m.d })));
+      if (!s0.error) P = s0.points;
+    }
+    const covered = new Set(priors.map(p => p.i));
+    if (P) {
+      if (priors.length) P = alignShape(P, priors);
+    } else if (covered.size === n) {
+      P = Array.from({ length: n }, (_, i) => { const p = priors.find(q => q.i === i); return [p.x, p.y]; });
+    } else {
+      return { error: "need GPS points for every corner, or at least " + dof0 + " lengths" };
+    }
+    P = P.map(p => p.slice());
+    const rows = (Q) => {
+      const R = [];
+      for (const m of dists) {
+        const d = Math.max(Math.hypot(Q[m.i][0] - Q[m.j][0], Q[m.i][1] - Q[m.j][1]), 1e-9);
+        const dx = (Q[m.i][0] - Q[m.j][0]) / d, dy = (Q[m.i][1] - Q[m.j][1]) / d, s = m.sigma;
+        R.push({ kind: "len", i: m.i, j: m.j, r: (d - m.d) / s, diff: d - m.d, t: [[2 * m.i, dx / s], [2 * m.i + 1, dy / s], [2 * m.j, -dx / s], [2 * m.j + 1, -dy / s]] });
+      }
+      for (const p of priors) {
+        R.push({ kind: "gps", i: p.i, r: (Q[p.i][0] - p.x) / p.sigma, diff: Q[p.i][0] - p.x, t: [[2 * p.i, 1 / p.sigma]] });
+        R.push({ kind: "gps", i: p.i, r: (Q[p.i][1] - p.y) / p.sigma, diff: Q[p.i][1] - p.y, t: [[2 * p.i + 1, 1 / p.sigma]] });
+      }
+      return R;
+    };
+    const np = 2 * n, cost = R => R.reduce((a, x) => a + x.r * x.r, 0);
+    let R = rows(P), c = cost(R), lam = 1e-3;
+    for (let it = 0; it < 300; it++) {
+      const A = Array.from({ length: np }, () => new Array(np).fill(0)), g = new Array(np).fill(0);
+      for (const row of R) for (const [a, va] of row.t) { g[a] += va * row.r; for (const [b, vb] of row.t) A[a][b] += va * vb; }
+      let ok = false;
+      for (let t = 0; t < 14; t++) {
+        const M = A.map((r, i) => r.map((v, j) => v + (i === j ? lam * (A[i][i] + 1e-9) + 1e-12 : 0)));
+        const st = solveLinear(M, g.map(v => -v));
+        if (!st) { lam *= 10; continue; }
+        const Q = P.map((p, i) => [p[0] + st[2 * i], p[1] + st[2 * i + 1]]);
+        const R2 = rows(Q), c2 = cost(R2);
+        if (c2 < c) { const gain = c - c2; P = Q; R = R2; c = c2; lam = Math.max(lam / 5, 1e-12); ok = gain > 1e-12; break; }
+        lam *= 10;
+      }
+      if (!ok) break;
+    }
+    // covariance of the corners, then area variance by propagation
+    const A = Array.from({ length: np }, () => new Array(np).fill(0));
+    for (const row of R) for (const [a, va] of row.t) for (const [b, vb] of row.t) A[a][b] += va * vb;
+    const tr = A.reduce((s2, r, i) => s2 + r[i], 0) / np;
+    const M = A.map((r, i) => r.map((v, j) => v + (i === j ? 1e-9 * tr : 0)));
+    const sa = signedArea(P), sg = sa >= 0 ? 1 : -1;
+    const grad = new Array(np).fill(0);
+    for (let i = 0; i < n; i++) {
+      const nx = P[(i + 1) % n], pv = P[(i + n - 1) % n];
+      grad[2 * i] = sg * (nx[1] - pv[1]) / 2; grad[2 * i + 1] = sg * (pv[0] - nx[0]) / 2;
+    }
+    const y = solveLinear(M, grad);
+    let varA = y ? grad.reduce((s2, v, i) => s2 + v * y[i], 0) : NaN;
+    const nobs = R.length, gauge = priors.length >= 2 ? 0 : priors.length === 1 ? 1 : 3;
+    const dof = nobs - (np - gauge);
+    let infl = 1;
+    if (dof > 0) infl = Math.max(1, Math.sqrt(c / dof));
+    const out = {
+      points: P, area: Math.abs(sa), sigmaArea: Math.sqrt(Math.max(varA, 0)) * infl,
+      chi2: c, dof, inflation: infl, simple: !selfIntersects(P),
+      residuals: R.filter(r => r.kind === "len").map(r => ({ i: r.i, j: r.j, z: r.r, diff: r.diff })),
+      gpsResiduals: priors.map(p => ({ i: p.i, dx: P[p.i][0] - p.x, dy: P[p.i][1] - p.y, z: Math.hypot((P[p.i][0] - p.x), (P[p.i][1] - p.y)) / p.sigma })),
+      mode: dists.length && priors.length ? "combined" : priors.length ? "gps" : "lengths"
+    };
+    out.perimeter = 0; for (let i = 0; i < n; i++) out.perimeter += dist(P, i, (i + 1) % n);
+    return out;
+  }
+
+  const api = { solveCombined, llToLocal, averageFixes, solve, area, formatArea, FEDDAN, QIRAT, SAHM };
   if (typeof module !== "undefined") module.exports = api; else root.LandCore = api;
 })(typeof self !== "undefined" ? self : this);
