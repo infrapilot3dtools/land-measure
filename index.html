@@ -64,6 +64,41 @@ svg{width:100%;height:auto;max-height:340px;display:block}
 #calc{flex:2;background:var(--brand);color:var(--onbrand)}
 #reset{background:var(--inputbg);color:var(--text);border:1px solid var(--line)}
 small{color:var(--muted)}
+.f .top{display:flex;justify-content:space-between;align-items:center;direction:ltr}
+.f .top label{display:inline}
+.tag{font-size:10px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:700}
+.arb{border:0;background:var(--brand);color:var(--onbrand);border-radius:8px;font-size:13px;padding:3px 8px;cursor:pointer;font-weight:700}
+.grow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.grow:last-child{border-bottom:0}
+.grow b{width:26px;height:26px;border-radius:8px;background:var(--brand);color:var(--onbrand);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.grow .st{flex:1;font-size:13px;color:var(--muted);direction:rtl}
+.grow .st.has{color:var(--text)}
+.sbtn{border:0;border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;cursor:pointer;background:var(--brand);color:var(--onbrand)}
+.sbtn.x{background:var(--inputbg);color:var(--text);border:1px solid var(--line)}
+details{margin-top:6px}
+summary{font-size:13px;color:var(--muted);cursor:pointer}
+details input{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--inputbg);color:var(--text);padding:8px;font-size:15px;direction:ltr}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:620px;border-radius:20px 20px 0 0;padding:18px;border:1px solid var(--line)}
+.sheet h3{margin:0 0 6px}
+.live{font-size:34px;font-weight:800;color:var(--brand);direction:ltr;text-align:center}
+.mono{direction:ltr;text-align:center;font-size:13px;color:var(--muted)}
+.prog{height:8px;background:var(--inputbg);border-radius:6px;overflow:hidden;margin:10px 0}
+.prog i{display:block;height:100%;background:var(--brand);width:0}
+#ar{position:fixed;inset:0;display:none;z-index:50;color:#fff;font-family:inherit}
+#ar.on{display:block}
+#ar .cross{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #0008}
+#ar .cross:after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;background:#2dd4bf;border-radius:50%}
+#ar .info{position:absolute;top:0;left:0;right:0;padding:14px;background:#000a;text-align:center;font-size:16px}
+#ar .info big{display:block;font-size:30px;font-weight:800;direction:ltr}
+#ar .btns{position:absolute;bottom:0;left:0;right:0;padding:14px;display:flex;gap:8px;background:#000a}
+#ar .btns button{flex:1;border:0;border-radius:12px;padding:14px 6px;font-size:16px;font-weight:700;background:#2dd4bf;color:#04211d}
+#ar .btns button.g{background:#ffffff33;color:#fff}
+.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.src span{background:#ffffff26;border-radius:8px;padding:3px 8px;font-size:12px}
+.note.info{background:var(--card);border:1px solid var(--line);color:var(--text)}
+
 </style>
 </head>
 <body>
@@ -79,16 +114,30 @@ small{color:var(--muted)}
     <div class="seg" id="useg"><button data-u="m2">متر مربع</button><button data-u="fed">فدان / قيراط / سهم</button></div>
     <p class="hint">قيس كل ضلع بين ركنين متتاليين وكمان الأقطار بالمتر. القطر هو اللي بيكشف الغلط. سيب الخانة فاضية لو ماقستهاش.</p>
   </div>
-  <div class="card"><h2><i>٣</i> الأضلاع</h2><div class="grid" id="sides"></div></div>
+  <div class="card"><h2><i>٣</i> الأضلاع (شريط / ليزر / كاميرا AR)</h2><div class="grid" id="sides"></div></div>
   <div class="card"><h2><i>٤</i> الأقطار</h2><div class="grid" id="diags"></div></div>
+  <div class="card"><h2><i>٥</i> إحداثيات الأركان (GPS أو RTK)</h2>
+    <p class="hint">اختياري. وقف على كل ركن واضغط سجّل. الـGPS لوحده دقته بالأمتار، فالأفضل تدمجه مع أطوال بالشريط. لو عندك جهاز RTK ادخل الإحداثيات من «إدخال يدوي».</p>
+    <div id="gpsrows"></div></div>
   <div id="out"></div>
 </main>
+<div class="modal" id="gm"><div class="sheet">
+  <h3 id="gtitle">تسجيل GPS</h3>
+  <p class="hint">وقف ثابت على الركن، شيل أي حاجة فوق الموبايل، وسيبه 20 ثانية على الأقل.</p>
+  <div class="live" id="gacc">--</div><div class="mono" id="gpos"></div>
+  <div class="prog"><i id="gbar"></i></div>
+  <div class="mono" id="gcnt">0 قراءة</div>
+  <div class="row2" style="display:flex;gap:8px;margin-top:12px"><button class="sbtn x" id="gcancel" style="flex:1">إلغاء</button><button class="sbtn" id="gstart" style="flex:2">ابدأ</button></div>
+</div></div>
+<div id="ar"><div class="cross"></div><div class="info"><div id="artxt">وجّه الكاميرا على الأرض وحرّكها ببطء</div><big id="ardist">--</big></div>
+  <div class="btns"><button class="g" id="arcancel">إلغاء</button><button class="g" id="arundo">تراجع</button><button id="arrec">سجّل نقطة</button><button id="aruse" style="display:none">استخدم القيمة</button></div></div>
 <div class="bar"><button id="reset">مسح</button><button id="calc">احسب المساحة</button></div>
 <script src="core.js"></script>
 <script>
 const L = i => String.fromCharCode(65 + i);
 const $ = id => document.getElementById(id);
 let state = JSON.parse(localStorage.getItem("land") || "null") || { n: 4, unit: "m2", v: {}, theme: "auto" };
+state.src = state.src || {}; state.gps = state.gps || {};
 function save() { localStorage.setItem("land", JSON.stringify(state)); }
 function applyTheme() {
   const dark = state.theme === "dark" || (state.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -97,9 +146,21 @@ function applyTheme() {
   document.querySelector('meta[name=theme-color]').content = dark ? "#0b1413" : "#0f766e";
 }
 $("theme").onclick = () => { const dark = document.documentElement.dataset.theme === "dark"; state.theme = dark ? "light" : "dark"; save(); applyTheme(); if (lastResult) renderResult(); };
+const pkey = (i, j) => [i, j].sort((a, b) => a - b).map(L).join("");
 function field(i, j) {
-  const k = [i, j].sort((a, b) => a - b).map(L).join("");
-  return `<div class="f"><label>${L(i)} – ${L(j)}</label><input data-k="${k}" type="number" inputmode="decimal" step="0.01" placeholder="م"></div>`;
+  const k = pkey(i, j);
+  return `<div class="f"><div class="top"><label>${L(i)} – ${L(j)}<span class="tag" data-tag="${k}" style="display:none">AR</span></label><button class="arb" data-ar="${k}" title="قياس بالكاميرا">📷 AR</button></div><input data-k="${k}" type="number" inputmode="decimal" step="0.01" placeholder="م"></div>`;
+}
+function refreshTags() { document.querySelectorAll("[data-tag]").forEach(t => t.style.display = state.src[t.dataset.tag] === "ar" ? "inline" : "none"); }
+function gpsRows() {
+  let h = "";
+  for (let i = 0; i < state.n; i++) {
+    const g = state.gps[L(i)];
+    const st = g ? `${g.src === "rtk" ? "RTK/يدوي" : g.n + " قراءة"} · ±${g.sigma.toFixed(g.sigma < 1 ? 2 : 1)} م<br><span dir="ltr">${g.lat.toFixed(6)}, ${g.lon.toFixed(6)}</span>` : "لم يتم التسجيل";
+    h += `<div class="grow"><b>${L(i)}</b><div class="st ${g ? "has" : ""}">${st}</div><button class="sbtn" data-rec="${i}">📍 سجّل</button>${g ? `<button class="sbtn x" data-clr="${i}">✕</button>` : ""}</div>
+    <details><summary>إدخال يدوي للركن ${L(i)} (RTK): خط العرض، خط الطول، الدقة بالمتر</summary><input data-rtk="${i}" placeholder="26.123456, 50.123456, 0.02" value="${g && g.src === "rtk" ? g.lat + ", " + g.lon + ", " + g.sigma : ""}"></details>`;
+  }
+  $("gpsrows").innerHTML = h;
 }
 function build() {
   const n = state.n;
@@ -111,78 +172,202 @@ function build() {
   $("sides").innerHTML = s; $("diags").innerHTML = d || "<small>لا توجد أقطار في المثلث</small>";
   document.querySelectorAll("input[data-k]").forEach(e => {
     e.value = state.v[e.dataset.k] ?? "";
-    e.addEventListener("input", () => { state.v[e.dataset.k] = e.value; save(); });
+    e.addEventListener("input", () => { state.v[e.dataset.k] = e.value; delete state.src[e.dataset.k]; save(); refreshTags(); });
   });
+  refreshTags(); gpsRows();
 }
 $("nchips").onclick = e => { const n = e.target.dataset.n; if (n) { state.n = +n; save(); build(); } };
 $("useg").onclick = e => { const u = e.target.dataset.u; if (u) { state.unit = u; save(); build(); if (lastResult) renderResult(); } };
-$("reset").onclick = () => { if (confirm("مسح كل القياسات؟")) { state.v = {}; save(); build(); $("out").innerHTML = ""; lastResult = null; } };
+$("reset").onclick = () => { if (confirm("مسح كل القياسات؟")) { state.v = {}; state.src = {}; state.gps = {}; save(); build(); $("out").innerHTML = ""; lastResult = null; } };
+document.addEventListener("click", e => {
+  const t = e.target;
+  if (t.dataset.ar) startAR(t.dataset.ar);
+  if (t.dataset.rec !== undefined) openGps(+t.dataset.rec);
+  if (t.dataset.clr !== undefined) { delete state.gps[L(+t.dataset.clr)]; save(); gpsRows(); }
+});
+document.addEventListener("change", e => {
+  const t = e.target; if (t.dataset.rtk === undefined) return;
+  const k = L(+t.dataset.rtk), p = t.value.split(/[,;\s]+/).filter(Boolean).map(Number);
+  if (p.length >= 2 && p.every(isFinite) && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180) { state.gps[k] = { lat: p[0], lon: p[1], sigma: p[2] > 0 ? p[2] : 0.05, n: 0, src: "rtk" }; }
+  else delete state.gps[k];
+  save(); gpsRows();
+});
+
+/* ---------- GPS recorder ---------- */
+let gw = null, gfix = [], gcorner = 0, gt0 = 0;
+function openGps(i) {
+  gcorner = i; gfix = [];
+  $("gtitle").textContent = "تسجيل GPS للركن " + L(i);
+  $("gacc").textContent = "--"; $("gpos").textContent = ""; $("gcnt").textContent = "0 قراءة"; $("gbar").style.width = "0";
+  $("gstart").textContent = "ابدأ"; $("gm").classList.add("on");
+}
+function gStop(saveIt) {
+  if (gw !== null) { navigator.geolocation.clearWatch(gw); gw = null; }
+  if (saveIt) {
+    const a = LandCore.averageFixes(gfix);
+    if (a) { state.gps[L(gcorner)] = { lat: a.lat, lon: a.lon, sigma: a.sigma, n: a.n, src: "gps" }; save(); gpsRows(); }
+  }
+  $("gm").classList.remove("on");
+}
+$("gcancel").onclick = () => gStop(false);
+$("gstart").onclick = () => {
+  if (gw !== null) { if (gfix.length < 1) return; gStop(true); return; }
+  if (!navigator.geolocation) { alert("المتصفح لا يدعم GPS"); return; }
+  gfix = []; gt0 = Date.now(); $("gstart").textContent = "إيقاف وحفظ";
+  gw = navigator.geolocation.watchPosition(p => {
+    gfix.push({ lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy });
+    $("gacc").textContent = "±" + p.coords.accuracy.toFixed(1) + " م";
+    $("gpos").textContent = p.coords.latitude.toFixed(6) + ", " + p.coords.longitude.toFixed(6);
+    $("gcnt").textContent = gfix.length + " قراءة · " + Math.round((Date.now() - gt0) / 1000) + " ثانية";
+    $("gbar").style.width = Math.min(100, (Date.now() - gt0) / 300) + "%";
+    if (Date.now() - gt0 > 30000) gStop(true);
+  }, err => { alert("تعذر قراءة الموقع: " + err.message + "\nتأكد إن الموقع (GPS) شغال وإنك سمحت للمتصفح."); gStop(false); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+};
+
+/* ---------- AR quick-measure (WebXR hit-test, experimental) ---------- */
+let xr = null;
+async function startAR(key) {
+  if (!navigator.xr || !(await navigator.xr.isSessionSupported("immersive-ar").catch(() => false))) {
+    alert("قياس الكاميرا (AR) مش متاح على المتصفح ده. استخدم Chrome على أندرويد وتأكد إن «Google Play Services for AR» متثبتة.");
+    return;
+  }
+  const el = $("ar"); el.classList.add("on");
+  const pts = []; let cur = null, done = false;
+  $("aruse").style.display = "none"; $("arrec").style.display = ""; $("ardist").textContent = "--";
+  $("artxt").textContent = `قياس ${key[0]}–${key[1]}: وجّه الدائرة على الركن ${key[0]} واضغط «سجّل نقطة»`;
+  let session;
+  try {
+    session = await navigator.xr.requestSession("immersive-ar", { requiredFeatures: ["hit-test"], optionalFeatures: ["dom-overlay"], domOverlay: { root: el } });
+  } catch (e) { el.classList.remove("on"); alert("تعذر تشغيل الكاميرا AR: " + e.message); return; }
+  const canvas = document.createElement("canvas"), gl = canvas.getContext("webgl", { xrCompatible: true });
+  await session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+  const ref = await session.requestReferenceSpace("local"), viewer = await session.requestReferenceSpace("viewer");
+  const src = await session.requestHitTestSource({ space: viewer });
+  const d3 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+  const upd = () => {
+    if (pts.length === 1 && cur) $("ardist").textContent = d3(pts[0], cur).toFixed(2) + " م";
+    if (pts.length === 2) $("ardist").textContent = d3(pts[0], pts[1]).toFixed(2) + " م";
+  };
+  const end = () => { try { session.end(); } catch (e) {} el.classList.remove("on"); };
+  xr = { end };
+  session.addEventListener("end", () => { el.classList.remove("on"); });
+  session.requestAnimationFrame(function frame(t, f) {
+    session.requestAnimationFrame(frame);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    const hits = f.getHitTestResults(src);
+    if (hits.length) { const p = hits[0].getPose(ref); if (p) cur = { x: p.transform.position.x, y: p.transform.position.y, z: p.transform.position.z }; }
+    upd();
+  });
+  $("arrec").onclick = () => {
+    if (!cur) { $("artxt").textContent = "الكاميرا لسه ماشافتش سطح. حرّكها ببطء على الأرض"; return; }
+    if (pts.length >= 2) return;
+    pts.push({ ...cur });
+    if (pts.length === 1) $("artxt").textContent = `دلوقتي وجّه الدائرة على الركن ${key[1]} (بدون ما تتحرك من مكانك لو ممكن) واضغط «سجّل نقطة»`;
+    else { $("artxt").textContent = "تم. راجع الرقم واضغط «استخدم القيمة» أو «تراجع»"; $("arrec").style.display = "none"; $("aruse").style.display = ""; }
+    upd();
+  };
+  $("arundo").onclick = () => { pts.length = 0; $("arrec").style.display = ""; $("aruse").style.display = "none"; $("ardist").textContent = "--"; $("artxt").textContent = `ابدأ من جديد: ركن ${key[0]}`; };
+  $("aruse").onclick = () => {
+    if (pts.length === 2) { const v = d3(pts[0], pts[1]); state.v[key] = v.toFixed(2); state.src[key] = "ar"; save(); build(); }
+    end();
+  };
+  $("arcancel").onclick = end;
+}
+
+/* ---------- results ---------- */
 function fmtArea(a) {
   if (state.unit === "fed") { const f = LandCore.formatArea(a); return { main: `${f.feddan} فدان، ${f.qirat} قيراط، ${f.sahm.toFixed(1)} سهم`, sub: `${a.toFixed(1)} م²` }; }
   return { main: `${a.toFixed(1)} م²`, sub: `${(a / LandCore.FEDDAN).toFixed(3)} فدان` };
 }
-function draw(P, flagged) {
+function draw(P, sig) {
   const cs = getComputedStyle(document.documentElement);
-  const brand = cs.getPropertyValue("--brand").trim(), text = cs.getPropertyValue("--text").trim(), muted = cs.getPropertyValue("--muted").trim(), shape = cs.getPropertyValue("--shape").trim(), bad = cs.getPropertyValue("--bad").trim();
+  const brand = cs.getPropertyValue("--brand").trim(), text = cs.getPropertyValue("--text").trim(), muted = cs.getPropertyValue("--muted").trim(), shape = cs.getPropertyValue("--shape").trim(), bad = cs.getPropertyValue("--warn").trim();
   const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   const W = 400, H = 320, pad = 38, sc = Math.min((W - 2 * pad) / Math.max(x1 - x0, 1e-6), (H - 2 * pad) / Math.max(y1 - y0, 1e-6));
-  const T = p => [pad + (p[0] - x0) * sc, H - pad - (p[1] - y0) * sc];
+  const T = p => [pad + (p[0] - x0) * sc + ((W - 2 * pad) - (x1 - x0) * sc) / 2, H - pad - (p[1] - y0) * sc - ((H - 2 * pad) - (y1 - y0) * sc) / 2];
   const pts = P.map(T), n = P.length;
+  const cx = pts.reduce((a, b) => a + b[0], 0) / n, cy = pts.reduce((a, b) => a + b[1], 0) / n;
   let g = `<polygon points="${pts.map(p => p.join(",")).join(" ")}" fill="${shape}" stroke="${brand}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  if (sig) pts.forEach((p, i) => { if (sig[i]) g += `<circle cx="${p[0]}" cy="${p[1]}" r="${Math.min(sig[i] * sc, 60)}" fill="none" stroke="${bad}" stroke-width="1.5" stroke-dasharray="4 3"/>`; });
   pts.forEach((p, i) => {
     const j = (i + 1) % n, q = pts[j], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
     const dl = Math.hypot(P[i][0] - P[j][0], P[i][1] - P[j][1]);
-    const cx = pts.reduce((a, b) => a + b[0], 0) / n, cy = pts.reduce((a, b) => a + b[1], 0) / n;
     const vx = mx - cx, vy = my - cy, vl = Math.hypot(vx, vy) || 1;
     g += `<text x="${mx + vx / vl * 14}" y="${my + vy / vl * 14 + 4}" font-size="12" text-anchor="middle" fill="${muted}">${dl.toFixed(2)}</text>`;
   });
   pts.forEach((p, i) => {
-    const cx = pts.reduce((a, b) => a + b[0], 0) / n, cy = pts.reduce((a, b) => a + b[1], 0) / n;
     const vx = p[0] - cx, vy = p[1] - cy, vl = Math.hypot(vx, vy) || 1;
     g += `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="${brand}"/><text x="${p[0] + vx / vl * 20}" y="${p[1] + vy / vl * 20 + 6}" font-size="17" font-weight="800" text-anchor="middle" fill="${text}">${L(i)}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
 }
 let lastResult = null;
+const TAPE = 0.02, arSigma = l => 0.05 + 0.02 * l;
 function renderResult() {
-  const r = lastResult, o = $("out");
-  if (r.error) {
-    o.innerHTML = `<div class="note warn">ناقص قياسات. ${r.error.replace("need at least", "المطلوب على الأقل").replace("lengths (sides + diagonals), have", "قياس (أضلاع + أقطار)، الموجود")}</div>`; return;
-  }
-  const a = fmtArea(r.area);
-  let h = `<div class="card hero"><div class="lbl">المساحة</div><div class="big">${a.main}</div><div class="sm">${a.sub}</div>
-  <div class="stats"><div class="stat">المحيط<b>${r.perimeter.toFixed(2)} م</b></div>
-  <div class="stat">متوسط الفرق<b>${r.redundancy > 0 ? (r.rms * 100).toFixed(1) + " سم" : "غير متاح"}</b></div></div></div>`;
+  const R = lastResult, o = $("out");
+  if (R.error) { o.innerHTML = `<div class="note warn">${R.error}</div>`; return; }
+  const r = R.c, a = fmtArea(r.area);
+  const mode = { lengths: "أطوال فقط", gps: "GPS فقط", combined: "أطوال + GPS" }[r.mode];
+  const pm = r.sigmaArea;
+  const pmTxt = `±${pm.toFixed(pm < 10 ? 2 : 1)} م²`;
+  let h = `<div class="card hero"><div class="lbl">المساحة · ${mode}</div><div class="big">${a.main}</div><div class="sm">${a.sub} · هامش الخطأ ${pmTxt}</div>
+  <div class="stats"><div class="stat">المحيط<b>${r.perimeter.toFixed(2)} م</b></div><div class="stat">هامش الخطأ<b>${(pm / r.area * 100).toFixed(1)}%</b></div></div>
+  <div class="src"><span>أطوال شريط: ${R.nTape}</span><span>أطوال AR: ${R.nAr}</span><span>أركان GPS/RTK: ${R.nGps}</span></div></div>`;
+  if (r.mode === "gps") h += `<div class="note warn">القياس ده GPS لوحده، فهو تقريبي: الموبايل بيغلط عادة من 3 لـ 5 متر في الركن. لتحسين الدقة أضف أطوال بالشريط، أو استخدم جهاز RTK.</div>`;
+  else if (r.mode === "combined") h += `<div class="note info">الأطوال بالشريط بتثبّت شكل الأرض، والـGPS بيحدد مكانها واتجاهها بس. المساحة هنا بتعتمد على الأطوال.</div>`;
   if (!r.simple) h += `<div class="note bad">الشكل بيتقاطع مع نفسه. غالبًا ترتيب الأركان غلط أو في قياس غلط كبير.</div>`;
+  if (r.inflation > 1.05) h += `<div class="note warn">القياسات مش متسقة مع بعض أكتر من المتوقع، فوسّعنا هامش الخطأ ×${r.inflation.toFixed(1)}.</div>`;
   let flagKey = null;
-  if (r.redundancy === 0) h += `<div class="note warn">مفيش قياسات زيادة، فمفيش طريقة أتأكد بيها من الدقة. زوّد قطر واحد على الأقل.</div>`;
-  else {
-    const top = r.suspects[0];
-    h += `<div class="note warn" style="background:var(--card);border:1px solid var(--line);color:var(--text)">مدى المساحة لو شلنا كل قياس لوحده: <b>${r.areaMin.toFixed(1)} – ${r.areaMax.toFixed(1)} م²</b></div>`;
-    if (top && Math.abs(top.misfit) > 0.1) {
-      flagKey = top.i + "-" + top.j;
-      h += `<div class="note bad">أكتر قياس مشكوك فيه: <b>${L(top.i)}–${L(top.j)}</b>. انت قيست ${top.measured.toFixed(2)} م والباقي بيقول ${top.predicted.toFixed(2)} م. أعد قياسه.</div>`;
-    } else h += `<div class="note ok">القياسات متسقة مع بعضها (أقل من 10 سم).</div>`;
-    if (r.redundancy === 1) h += `<p class="hint">عندك قياس زيادة واحد بس، فتحديد القياس الغلط تقريبي. زوّد أقطار لدقة أعلى.</p>`;
+  if (r.mode === "lengths" && R.legacy) {
+    const q = R.legacy;
+    if (q.redundancy === 0) h += `<div class="note warn">مفيش قياسات زيادة، فمفيش طريقة أتأكد بيها من الدقة. زوّد قطر واحد على الأقل.</div>`;
+    else {
+      const top = q.suspects[0];
+      if (top && Math.abs(top.misfit) > 0.1) { flagKey = top.i + "-" + top.j; h += `<div class="note bad">أكتر قياس مشكوك فيه: <b>${L(top.i)}–${L(top.j)}</b>. انت قيست ${top.measured.toFixed(2)} م والباقي بيقول ${top.predicted.toFixed(2)} م. أعد قياسه.</div>`; }
+      else h += `<div class="note ok">القياسات متسقة مع بعضها (أقل من 10 سم).</div>`;
+      if (q.redundancy === 1) h += `<p class="hint">عندك قياس زيادة واحد بس، فتحديد القياس الغلط تقريبي. زوّد أقطار لدقة أعلى.</p>`;
+    }
+  } else {
+    const bad = r.residuals.filter(x => Math.abs(x.z) > 3).sort((x, y) => Math.abs(y.z) - Math.abs(x.z));
+    const badG = r.gpsResiduals.filter(x => x.z > 3).sort((x, y) => y.z - x.z);
+    if (bad[0]) { flagKey = bad[0].i + "-" + bad[0].j; h += `<div class="note bad">القياس <b>${L(bad[0].i)}–${L(bad[0].j)}</b> مش متسق مع الباقي (فرق ${(bad[0].diff * 100).toFixed(0)} سم). أعد قياسه.</div>`; }
+    if (badG[0]) h += `<div class="note bad">قراءة GPS للركن <b>${L(badG[0].i)}</b> بعيدة عن الباقي (${Math.hypot(badG[0].dx, badG[0].dy).toFixed(1)} م). أعد تسجيلها.</div>`;
+    if (!bad[0] && !badG[0] && r.dof > 0) h += `<div class="note ok">القياسات متسقة مع بعضها.</div>`;
   }
-  h += `<div class="card"><h2>الرسم</h2>${draw(r.points)}</div>`;
-  h += `<div class="card"><h2>تفاصيل القياسات</h2><table class="tbl"><tr><th>الفرق</th><th>بعد التسوية</th><th>المقاس</th><th></th></tr>`;
-  r.residuals.forEach(x => {
-    const fl = flagKey && (x.i + "-" + x.j === flagKey);
-    h += `<tr class="${fl ? "flag" : ""}"><td>${x.diff >= 0 ? "+" : ""}${x.diff.toFixed(3)}</td><td>${x.fitted.toFixed(3)}</td><td>${x.measured.toFixed(3)}</td><td>${L(x.i)}${L(x.j)}</td></tr>`;
-  });
-  h += `</table></div>`;
+  const sig = r.mode === "lengths" ? null : R.sigmaPts;
+  h += `<div class="card"><h2>الرسم${sig ? " (الدواير المنقطة = هامش خطأ GPS)" : ""}</h2>${draw(r.points, sig)}</div>`;
+  if (r.residuals.length) {
+    h += `<div class="card"><h2>تفاصيل القياسات</h2><table class="tbl"><tr><th>الفرق</th><th>بعد التسوية</th><th>المقاس</th><th></th></tr>`;
+    r.residuals.forEach((x, idx) => {
+      const m = R.dists[idx], fl = flagKey && (x.i + "-" + x.j === flagKey || x.j + "-" + x.i === flagKey);
+      h += `<tr class="${fl ? "flag" : ""}"><td>${x.diff >= 0 ? "+" : ""}${x.diff.toFixed(3)}</td><td>${(m.d + x.diff).toFixed(3)}</td><td>${m.d.toFixed(3)}${m.src === "ar" ? " 📷" : ""}</td><td>${L(x.i)}${L(x.j)}</td></tr>`;
+    });
+    h += `</table></div>`;
+  }
   o.innerHTML = h;
 }
 function calc() {
-  const n = state.n, meas = [];
+  const n = state.n, dists = [];
   for (const [k, v] of Object.entries(state.v)) {
     if (v === "" || isNaN(+v) || +v <= 0) continue;
     const i = k.charCodeAt(0) - 65, j = k.charCodeAt(1) - 65;
-    if (i < n && j < n) meas.push({ i, j, d: +v });
+    if (i < n && j < n) { const src = state.src[k] === "ar" ? "ar" : "tape"; dists.push({ i, j, d: +v, src, sigma: src === "ar" ? arSigma(+v) : TAPE }); }
   }
-  lastResult = LandCore.solve(n, meas);
+  const gl = []; for (let i = 0; i < n; i++) if (state.gps[L(i)]) gl.push({ i, ...state.gps[L(i)] });
+  let priors = [];
+  if (gl.length) {
+    const o = { lat: gl.reduce((a, g) => a + g.lat, 0) / gl.length, lon: gl.reduce((a, g) => a + g.lon, 0) / gl.length };
+    const loc = LandCore.llToLocal(gl, o);
+    priors = gl.map((g, q) => ({ i: g.i, x: loc[q][0], y: loc[q][1], sigma: Math.max(g.sigma / Math.SQRT2, 0.01) }));
+  }
+  const c = LandCore.solveCombined(n, dists, priors);
+  if (c.error) { lastResult = { error: "ناقص قياسات: لازم أطوال كفاية (" + (2 * n - 3) + " على الأقل بين أضلاع وأقطار) أو إحداثيات GPS لكل الأركان." }; }
+  else {
+    lastResult = { c, dists, nTape: dists.filter(d => d.src === "tape").length, nAr: dists.filter(d => d.src === "ar").length, nGps: gl.length,
+      sigmaPts: Array.from({ length: n }, (_, i) => { const g = gl.find(x => x.i === i); return g ? g.sigma : 0; }) };
+    if (!priors.length) { const q = LandCore.solve(n, dists.map(d => ({ i: d.i, j: d.j, d: d.d }))); if (!q.error) lastResult.legacy = q; }
+  }
   renderResult();
   $("out").scrollIntoView({ behavior: "smooth" });
 }
