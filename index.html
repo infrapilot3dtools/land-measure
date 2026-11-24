@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAElklEQVR4nO3dMWobQRiG4XFw4Ts4hVXuBQy5hsEgVDhHMT6KmxAQ+BoGX8ClGh/CZYoFEbzSaFafZ+b/pPepEgniRbz6f+2uTC6uH24ScKwfvQ8A3ggIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKC5LL3AajWb1dfHrm//exyJOfJewJN69n3ICpxnUD5SsZnGUUNeE8gdGcZUOGSYpc14BfQrCxoqDa/gBAKAUFCQJC4nsaX+3jeTB/8+XvR/kjq+fJRr+X1i9MP6M/73+mDO6saebWVuZTaJqMLx//ysvzcavPyOPcfXw3LzLOh8jr4OjRoyDKgVNbQEfUclMmrcVuF76LaDZ3+CvteOxfiKLMW03fnVT6D129XVRtyDWh8Ufa9jjVmz0GZtlLbvFpyXWFb04a61COatRmPuLxebwi5TqCtX+/v+be+hVmb8XUYKh/ODPYBnbxpW6G2HVeiIfEO6ON5cwL7y5p3QOdp7llC1dN4AoLEOKBz3l/lQ6j2lWjjgM5cSUMN7oURkLF8Q9yNzznn/TW1uHv6/698HwjzbF4eV8Oyyw01VhgklgGxv+KwDAhxEBAkfgGxv0LxCwihENAp6HUOn+wCYn9FYxYQoiEgSJwCYn8F5BQQAiIgSGwCYn/FZBMQYiIgSDwCYn9ldLwMnVwCQlgEBIlBQOyvyAwCQmQEBEn0gNhfwUUPCMERECShA2J/xRc6IBzU9zJ0ihwQ48dC3IBggYAgCRoQ+8tF0IDggoAgiRgQ+8tIxIBghIAgCRcQ+6tc98vQKWBA8EJAkMQKiP1lJ1ZAsENAkAQKiP3lKFBAcERAkEQJiP1lKkpAMEVAriLcx0hBAmJ/+QoREHwRECT9A2J/WesfEKwRECSdA2J/uWMCQUJAkPQMiP11tCCXoRMTCKLLlj9s/XbV8sehgUYB7UzndRgWKW1eHtscA2poscLyg2dx99TgGFBJ9YBK1hYN+aobUPmHHhoyxVkYJBUDmnvOxRByxASChID8xLkMnaIFtBqWq2HZ+ygwQ9Mr0QeNb6yP5830Ke6axVQxoPvbz1mfo+9vP8c/7JzPVBVTrAmUQVUx1Q2ofAhtx88sVNVd9QlU0tBx9exDVS21WGH5hr63nn3Kq0qENcfF9cNNsx/2JaM26Rwh4LiaXqYP8uo1Dchax6r23eSJ0BABSWpXVXJ/sG9GNqfxMfGBnQnUyBFVlX89oeMQIqCeMlXN/XJLr4ZYYT1lNuBr8vh2FAGFM1a1Th6/AhXr6xywQ0CQEBAkBBTUrLOqjqfxBBRXYRZ9r0QTECScxoc2Tpd9X4aJcDOVCWRgZygR6klMIBdBcpliAkFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFB8g9KfWi+DsV0UgAAAABJRU5ErkJggg==">
+<title>قياس الأرض</title>
+<style>
+:root{
+  --bg:#f3f6f5;--card:#ffffff;--text:#10201e;--muted:#5b6f6b;--line:#e1e9e7;
+  --brand:#0f766e;--brand2:#14b8a6;--onbrand:#fff;--inputbg:#f6faf9;
+  --ok-bg:#e3f6ec;--ok:#157347;--warn-bg:#fff4d6;--warn:#8a5a00;--bad-bg:#fde8e6;--bad:#b3261e;
+  --shape:#14b8a633;--shadow:0 2px 10px #0a2a2615;
+}
+[data-theme=dark]{
+  --bg:#0b1413;--card:#13201e;--text:#e6f2ef;--muted:#92a9a4;--line:#223431;
+  --brand:#2dd4bf;--brand2:#0f766e;--onbrand:#04211d;--inputbg:#0e1a18;
+  --ok-bg:#12372a;--ok:#5fdc9c;--warn-bg:#3a2f0c;--warn:#f2c14e;--bad-bg:#3d1a18;--bad:#ff8a80;
+  --shape:#2dd4bf2b;--shadow:0 2px 12px #0008;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,"Segoe UI",Roboto,"Noto Sans Arabic",sans-serif;line-height:1.5;padding-bottom:84px}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,var(--brand2),var(--brand));color:var(--onbrand);box-shadow:var(--shadow)}
+header h1{margin:0;font-size:19px;font-weight:700}
+header .sub{font-size:12px;opacity:.85}
+#theme{background:#ffffff26;color:inherit;border:0;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer}
+main{max-width:620px;margin:auto;padding:14px}
+.card{background:var(--card);border-radius:16px;padding:14px 14px 10px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.card h2{margin:0 0 8px;font-size:15px;color:var(--muted);font-weight:600;display:flex;gap:8px;align-items:center}
+.card h2 i{font-style:normal;background:var(--brand);color:var(--onbrand);border-radius:8px;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.seg{display:flex;background:var(--inputbg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px 4px;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--brand);color:var(--onbrand)}
+.chips{display:flex;gap:5px;margin-bottom:6px}
+.chips button{flex:1;min-width:0;border:1px solid var(--line);background:var(--inputbg);color:var(--text);padding:8px 0;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer}
+.chips button.on{background:var(--brand);color:var(--onbrand);border-color:var(--brand)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f{background:var(--inputbg);border:1px solid var(--line);border-radius:12px;padding:6px 10px 4px}
+.f:focus-within{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand)44}
+.f label{display:block;font-size:12px;color:var(--muted);direction:ltr;text-align:right;font-weight:700}
+.f input{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:21px;padding:2px 0 4px;text-align:right;direction:ltr;font-weight:600}
+.f input::placeholder{color:var(--muted);opacity:.5;font-weight:400}
+.hint{font-size:13px;color:var(--muted);margin:0 0 10px}
+.hero{background:linear-gradient(135deg,var(--brand2),var(--brand));color:var(--onbrand);border:0}
+.hero .lbl{font-size:13px;opacity:.85}
+.hero .big{font-size:28px;font-weight:800;line-height:1.3;margin:2px 0}
+.hero .sm{font-size:14px;opacity:.9}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat{background:#ffffff22;border-radius:10px;padding:8px 10px;font-size:13px}
+.stat b{display:block;font-size:16px}
+.note{border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}
+.note.ok{background:var(--ok-bg);color:var(--ok)}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+svg{width:100%;height:auto;max-height:340px;display:block}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;direction:ltr}
+.tbl th{color:var(--muted);font-weight:600;text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.tbl td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}
+.tbl tr.flag td{color:var(--bad);font-weight:700}
+.bar{position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.bar button{flex:1;border:0;border-radius:14px;padding:14px;font-size:17px;font-weight:700;cursor:pointer}
+#calc{flex:2;background:var(--brand);color:var(--onbrand)}
+#reset{background:var(--inputbg);color:var(--text);border:1px solid var(--line)}
+small{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>قياس الأرض</h1><div class="sub">مساحة من الأضلاع والأقطار</div></div>
+  <button id="theme" aria-label="الوضع">🌙</button>
+</header>
+<main>
+  <div class="card">
+    <h2><i>١</i> عدد الأركان</h2>
+    <div class="chips" id="nchips"></div>
+    <h2 style="margin-top:10px"><i>٢</i> وحدة المساحة</h2>
+    <div class="seg" id="useg"><button data-u="m2">متر مربع</button><button data-u="fed">فدان / قيراط / سهم</button></div>
+    <p class="hint">قيس كل ضلع بين ركنين متتاليين وكمان الأقطار بالمتر. القطر هو اللي بيكشف الغلط. سيب الخانة فاضية لو ماقستهاش.</p>
+  </div>
+  <div class="card"><h2><i>٣</i> الأضلاع</h2><div class="grid" id="sides"></div></div>
+  <div class="card"><h2><i>٤</i> الأقطار</h2><div class="grid" id="diags"></div></div>
+  <div id="out"></div>
+</main>
+<div class="bar"><button id="reset">مسح</button><button id="calc">احسب المساحة</button></div>
+<script src="core.js"></script>
+<script>
+const L = i => String.fromCharCode(65 + i);
+const $ = id => document.getElementById(id);
+let state = JSON.parse(localStorage.getItem("land") || "null") || { n: 4, unit: "m2", v: {}, theme: "auto" };
+function save() { localStorage.setItem("land", JSON.stringify(state)); }
+function applyTheme() {
+  const dark = state.theme === "dark" || (state.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("theme").textContent = dark ? "☀️" : "🌙";
+  document.querySelector('meta[name=theme-color]').content = dark ? "#0b1413" : "#0f766e";
+}
+$("theme").onclick = () => { const dark = document.documentElement.dataset.theme === "dark"; state.theme = dark ? "light" : "dark"; save(); applyTheme(); if (lastResult) renderResult(); };
+function field(i, j) {
+  const k = [i, j].sort((a, b) => a - b).map(L).join("");
+  return `<div class="f"><label>${L(i)} – ${L(j)}</label><input data-k="${k}" type="number" inputmode="decimal" step="0.01" placeholder="م"></div>`;
+}
+function build() {
+  const n = state.n;
+  $("nchips").innerHTML = [3,4,5,6,7,8,9,10].map(k => `<button data-n="${k}" class="${k === n ? "on" : ""}">${k}</button>`).join("");
+  document.querySelectorAll("#useg button").forEach(b => b.classList.toggle("on", b.dataset.u === state.unit));
+  let s = "", d = "";
+  for (let i = 0; i < n; i++) s += field(i, (i + 1) % n);
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { if (j === i + 1 || (i === 0 && j === n - 1)) continue; d += field(i, j); }
+  $("sides").innerHTML = s; $("diags").innerHTML = d || "<small>لا توجد أقطار في المثلث</small>";
+  document.querySelectorAll("input[data-k]").forEach(e => {
+    e.value = state.v[e.dataset.k] ?? "";
+    e.addEventListener("input", () => { state.v[e.dataset.k] = e.value; save(); });
+  });
+}
+$("nchips").onclick = e => { const n = e.target.dataset.n; if (n) { state.n = +n; save(); build(); } };
+$("useg").onclick = e => { const u = e.target.dataset.u; if (u) { state.unit = u; save(); build(); if (lastResult) renderResult(); } };
+$("reset").onclick = () => { if (confirm("مسح كل القياسات؟")) { state.v = {}; save(); build(); $("out").innerHTML = ""; lastResult = null; } };
+function fmtArea(a) {
+  if (state.unit === "fed") { const f = LandCore.formatArea(a); return { main: `${f.feddan} فدان، ${f.qirat} قيراط، ${f.sahm.toFixed(1)} سهم`, sub: `${a.toFixed(1)} م²` }; }
+  return { main: `${a.toFixed(1)} م²`, sub: `${(a / LandCore.FEDDAN).toFixed(3)} فدان` };
+}
+function draw(P, flagged) {
+  const cs = getComputedStyle(document.documentElement);
+  const brand = cs.getPropertyValue("--brand").trim(), text = cs.getPropertyValue("--text").trim(), muted = cs.getPropertyValue("--muted").trim(), shape = cs.getPropertyValue("--shape").trim(), bad = cs.getPropertyValue("--bad").trim();
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const W = 400, H = 320, pad = 38, sc = Math.min((W - 2 * pad) / Math.max(x1 - x0, 1e-6), (H - 2 * pad) / Math.max(y1 - y0, 1e-6));
+  const T = p => [pad + (p[0] - x0) * sc, H - pad - (p[1] - y0) * sc];
+  const pts = P.map(T), n = P.length;
+  let g = `<polygon points="${pts.map(p => p.join(",")).join(" ")}" fill="${shape}" stroke="${brand}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p, i) => {
+    const j = (i + 1) % n, q = pts[j], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+    const dl = Math.hypot(P[i][0] - P[j][0], P[i][1] - P[j][1]);
+    const cx = pts.reduce((a, b) => a + b[0], 0) / n, cy = pts.reduce((a, b) => a + b[1], 0) / n;
+    const vx = mx - cx, vy = my - cy, vl = Math.hypot(vx, vy) || 1;
+    g += `<text x="${mx + vx / vl * 14}" y="${my + vy / vl * 14 + 4}" font-size="12" text-anchor="middle" fill="${muted}">${dl.toFixed(2)}</text>`;
+  });
+  pts.forEach((p, i) => {
+    const cx = pts.reduce((a, b) => a + b[0], 0) / n, cy = pts.reduce((a, b) => a + b[1], 0) / n;
+    const vx = p[0] - cx, vy = p[1] - cy, vl = Math.hypot(vx, vy) || 1;
+    g += `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="${brand}"/><text x="${p[0] + vx / vl * 20}" y="${p[1] + vy / vl * 20 + 6}" font-size="17" font-weight="800" text-anchor="middle" fill="${text}">${L(i)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+let lastResult = null;
+function renderResult() {
+  const r = lastResult, o = $("out");
+  if (r.error) {
+    o.innerHTML = `<div class="note warn">ناقص قياسات. ${r.error.replace("need at least", "المطلوب على الأقل").replace("lengths (sides + diagonals), have", "قياس (أضلاع + أقطار)، الموجود")}</div>`; return;
+  }
+  const a = fmtArea(r.area);
+  let h = `<div class="card hero"><div class="lbl">المساحة</div><div class="big">${a.main}</div><div class="sm">${a.sub}</div>
+  <div class="stats"><div class="stat">المحيط<b>${r.perimeter.toFixed(2)} م</b></div>
+  <div class="stat">متوسط الفرق<b>${r.redundancy > 0 ? (r.rms * 100).toFixed(1) + " سم" : "غير متاح"}</b></div></div></div>`;
+  if (!r.simple) h += `<div class="note bad">الشكل بيتقاطع مع نفسه. غالبًا ترتيب الأركان غلط أو في قياس غلط كبير.</div>`;
+  let flagKey = null;
+  if (r.redundancy === 0) h += `<div class="note warn">مفيش قياسات زيادة، فمفيش طريقة أتأكد بيها من الدقة. زوّد قطر واحد على الأقل.</div>`;
+  else {
+    const top = r.suspects[0];
+    h += `<div class="note warn" style="background:var(--card);border:1px solid var(--line);color:var(--text)">مدى المساحة لو شلنا كل قياس لوحده: <b>${r.areaMin.toFixed(1)} – ${r.areaMax.toFixed(1)} م²</b></div>`;
+    if (top && Math.abs(top.misfit) > 0.1) {
+      flagKey = top.i + "-" + top.j;
+      h += `<div class="note bad">أكتر قياس مشكوك فيه: <b>${L(top.i)}–${L(top.j)}</b>. انت قيست ${top.measured.toFixed(2)} م والباقي بيقول ${top.predicted.toFixed(2)} م. أعد قياسه.</div>`;
+    } else h += `<div class="note ok">القياسات متسقة مع بعضها (أقل من 10 سم).</div>`;
+    if (r.redundancy === 1) h += `<p class="hint">عندك قياس زيادة واحد بس، فتحديد القياس الغلط تقريبي. زوّد أقطار لدقة أعلى.</p>`;
+  }
+  h += `<div class="card"><h2>الرسم</h2>${draw(r.points)}</div>`;
+  h += `<div class="card"><h2>تفاصيل القياسات</h2><table class="tbl"><tr><th>الفرق</th><th>بعد التسوية</th><th>المقاس</th><th></th></tr>`;
+  r.residuals.forEach(x => {
+    const fl = flagKey && (x.i + "-" + x.j === flagKey);
+    h += `<tr class="${fl ? "flag" : ""}"><td>${x.diff >= 0 ? "+" : ""}${x.diff.toFixed(3)}</td><td>${x.fitted.toFixed(3)}</td><td>${x.measured.toFixed(3)}</td><td>${L(x.i)}${L(x.j)}</td></tr>`;
+  });
+  h += `</table></div>`;
+  o.innerHTML = h;
+}
+function calc() {
+  const n = state.n, meas = [];
+  for (const [k, v] of Object.entries(state.v)) {
+    if (v === "" || isNaN(+v) || +v <= 0) continue;
+    const i = k.charCodeAt(0) - 65, j = k.charCodeAt(1) - 65;
+    if (i < n && j < n) meas.push({ i, j, d: +v });
+  }
+  lastResult = LandCore.solve(n, meas);
+  renderResult();
+  $("out").scrollIntoView({ behavior: "smooth" });
+}
+$("calc").onclick = calc;
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", applyTheme);
+applyTheme(); build();
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
