@@ -99,6 +99,40 @@ details input{width:100%;margin-top:6px;border:1px solid var(--line);border-radi
 .src span{background:#ffffff26;border-radius:8px;padding:3px 8px;font-size:12px}
 .note.info{background:var(--card);border:1px solid var(--line);color:var(--text)}
 
+/* photo precision mode */
+#pm{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;flex-direction:column}
+#pm.on{display:flex}
+#pm .pmh{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,var(--brand2),var(--brand));color:var(--onbrand)}
+#pm .pmh h2{margin:0;font-size:17px;flex:1;color:var(--onbrand)}
+#pm .pmh .steps{font-size:12px;opacity:.85;white-space:nowrap}
+#pm .pmh button{background:#ffffff26;border:0;color:inherit;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;flex:none}
+#pmbody{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;max-width:620px;width:100%;margin:0 auto}
+#pmfoot{display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+#pmfoot button{flex:1;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:700;cursor:pointer}
+#pmnext{background:var(--brand);color:var(--onbrand);flex:2}
+#pmnext:disabled{opacity:.4}
+#pmback{background:var(--inputbg);color:var(--text);border:1px solid var(--line)}
+.pv{position:relative;flex:1;min-height:340px;border-radius:14px;overflow:hidden;background:#000;touch-action:none;border:1px solid var(--line)}
+.pv canvas.pvc{position:absolute;inset:0;width:100%;height:100%}
+.loupe{position:absolute;width:140px;height:140px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 12px #000a;pointer-events:none;display:none;background:#000;z-index:3}
+.loupe:after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-8px;border:2px solid #2dd4bf;border-radius:50%}
+.qbadge{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:6px 12px;font-weight:700;font-size:15px}
+.qbadge.good{background:var(--ok-bg);color:var(--ok)}
+.qbadge.mid{background:var(--warn-bg);color:var(--warn)}
+.qbadge.bad{background:var(--bad-bg);color:var(--bad)}
+.chk{font-size:14px;padding:8px 10px;border-radius:10px;margin-top:6px}
+.chk.mid{background:var(--warn-bg);color:var(--warn)}
+.chk.bad{background:var(--bad-bg);color:var(--bad)}
+.chk.info{background:var(--inputbg);color:var(--muted);border:1px solid var(--line)}
+.bigbtn{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed var(--line);border-radius:14px;background:var(--inputbg);color:var(--text);padding:20px;font-size:17px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px}
+.bigbtn span{font-size:13px;color:var(--muted);font-weight:400}
+.refchips{display:flex;gap:6px;margin-bottom:10px}
+.refchips button{flex:1;border:1px solid var(--line);background:var(--inputbg);color:var(--text);padding:10px 2px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.refchips button.on{background:var(--brand);color:var(--onbrand);border-color:var(--brand)}
+.pmini{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;margin-top:6px}
+.pvwrap{display:flex;flex-direction:column;flex:1;min-height:0}
+img.ppreview,canvas.ppreview{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+
 </style>
 </head>
 <body>
@@ -113,6 +147,11 @@ details input{width:100%;margin-top:6px;border:1px solid var(--line);border-radi
     <h2 style="margin-top:10px"><i>٢</i> وحدة المساحة</h2>
     <div class="seg" id="useg"><button data-u="m2">متر مربع</button><button data-u="fed">فدان / قيراط / سهم</button></div>
     <p class="hint">قيس كل ضلع بين ركنين متتاليين وكمان الأقطار بالمتر. القطر هو اللي بيكشف الغلط. سيب الخانة فاضية لو ماقستهاش.</p>
+  </div>
+  <div class="card">
+    <h2><i>📷</i> قياس بالصورة — للمساحات والأطوال الصغيرة</h2>
+    <p class="hint">للحجرات والبلاط والحدائق الصغيرة والقطع: صوّر من فوق وحط جنب اللي بتقيسه ورقة A4 أو كارت بنك، وحدد الأركان على الصورة. الدقة بالمللي تقريبًا لو التصوير مظبوط.</p>
+    <button class="sbtn" id="pmopen" style="width:100%;padding:14px;font-size:16px">📷 ابدأ القياس بالصورة</button>
   </div>
   <div class="card"><h2><i>٣</i> الأضلاع (شريط / ليزر / كاميرا AR)</h2><div class="grid" id="sides"></div></div>
   <div class="card"><h2><i>٤</i> الأقطار</h2><div class="grid" id="diags"></div></div>
@@ -131,6 +170,13 @@ details input{width:100%;margin-top:6px;border:1px solid var(--line);border-radi
 </div></div>
 <div id="ar"><div class="cross"></div><div class="info"><div id="artxt">وجّه الكاميرا على الأرض وحرّكها ببطء</div><big id="ardist">--</big></div>
   <div class="btns"><button class="g" id="arcancel">إلغاء</button><button class="g" id="arundo">تراجع</button><button id="arrec">سجّل نقطة</button><button id="aruse" style="display:none">استخدم القيمة</button></div></div>
+<div id="pm">
+  <div class="pmh"><button id="pmclose" aria-label="إغلاق">✕</button><h2>قياس بالصورة</h2><div class="steps" id="pmstep"></div></div>
+  <div id="pmbody"></div>
+  <div id="pmfoot"><button id="pmback">رجوع</button><button id="pmnext">التالي</button></div>
+</div>
+<input type="file" id="pmcam" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="pmgal" accept="image/*" style="display:none">
 <div class="bar"><button id="reset">مسح</button><button id="calc">احسب المساحة</button></div>
 <script src="core.js"></script>
 <script>
@@ -272,6 +318,375 @@ async function startAR(key) {
     end();
   };
   $("arcancel").onclick = end;
+}
+
+/* ---------- photo precision mode ---------- */
+const PM = { step: 1, imgCanvas: null, blurVar: NaN, refType: "a4", customLen: 10, refPts: [], plotPts: [], result: null, preview: null };
+const REFS = {
+  a4: { n: 4, label: "ورقة A4", hint: "حدد زوايا الورقة الأربع بالترتيب (١ → ٢ → ٣ → ٤)" },
+  card: { n: 2, len: 85.6, label: "كارت بنك", hint: "حدد طرفي الطول الأطول للكارت" },
+  custom: { n: 2, label: "مرجع مخصص", hint: "حدد طرفي الطول المعروف" }
+};
+const fmtLen = mm => mm < 10 ? mm.toFixed(1) + " مم" : mm < 1000 ? (mm / 10).toFixed(1) + " سم" : (mm / 1000).toFixed(2) + " م";
+const fmtAreaSmall = m2 => m2 < 1 ? (m2 * 1e4).toFixed(0) + " سم²" : m2.toFixed(3) + " م²";
+const QT = { good: "جيدة", mid: "متوسطة", bad: "ضعيفة" };
+const CHKTXT = {
+  refsize: c => "المرجع صغير في الصورة (" + Math.round(c.value * 100) + "% منها). قرّب الكاميرا بحيث المرجع ياخد ربع الصورة على الأقل.",
+  persp: c => "زاوية التصوير مائلة (×" + c.value.toFixed(2) + "). صوّر من أعلى مباشرة والموبايل موازي للسطح.",
+  blur: () => "الصورة مش حادة (اهتزاز أو إضاءة ضعيفة). أعد التصوير بثبات وإضاءة كويسة.",
+  selfx: () => "حدود المساحة بتتقاطع مع بعضها. راجع ترتيب النقاط.",
+  lineRef: () => "مرجع بنقطتين لا يصحّح ميل الكاميرا. ورقة A4 (٤ زوايا) تعطي دقة أعلى."
+};
+function blurVariance(src) {
+  const w = Math.min(600, src.width), h = Math.max(2, Math.round(src.height * w / src.width));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) g[i] = d[4 * i] * .299 + d[4 * i + 1] * .587 + d[4 * i + 2] * .114;
+  let sum = 0, sq = 0, n = 0;
+  for (let y = 1; y < h - 1; y += 2) for (let xx = 1; xx < w - 1; xx += 2) {
+    const lap = 4 * g[y * w + xx] - g[y * w + xx - 1] - g[y * w + xx + 1] - g[(y - 1) * w + xx] - g[(y + 1) * w + xx];
+    sum += lap; sq += lap * lap; n++;
+  }
+  return n ? sq / n - (sum / n) ** 2 : NaN;
+}
+function inv3(H) {
+  const [a, b, c] = H[0], [d, e, f] = H[1], [g, h, i] = H[2];
+  const A = e * i - f * h, B = c * h - b * i, C = b * f - c * e;
+  const D = f * g - d * i, E = a * i - c * g, F = c * d - a * f;
+  const G = d * h - e * g, I = b * g - a * h, J = a * e - b * d;
+  const det = a * A + b * D + c * G;
+  return [[A / det, B / det, C / det], [D / det, E / det, F / det], [G / det, I / det, J / det]];
+}
+// warp the plot region to a top-down view. Returns {canvas,k,x0,y0} (px per mm, origin mm)
+function warpRect(photo, res) {
+  const P = res.plotMm, xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const bw0 = Math.max(...xs) - Math.min(...xs), bh0 = Math.max(...ys) - Math.min(...ys);
+  const pad = Math.max(bw0, bh0) * 0.12 + 5;
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad, bw = bw0 + 2 * pad, bh = bh0 + 2 * pad;
+  const k = Math.min(1200 / bw, 900 / bh, 8);
+  const W = Math.max(2, Math.round(bw * k)), Ht = Math.max(2, Math.round(bh * k));
+  const out = document.createElement("canvas"); out.width = W; out.height = Ht;
+  const octx = out.getContext("2d");
+  const sctx = photo.getContext("2d", { willReadFrequently: true });
+  const src = sctx.getImageData(0, 0, photo.width, photo.height);
+  const img = octx.createImageData(W, Ht);
+  const Hi = inv3(res.H);
+  const pw = photo.width, ph = photo.height, sd = src.data, od = img.data;
+  for (let oy = 0; oy < Ht; oy++) {
+    const Y = y0 + (oy + .5) / k;
+    for (let ox = 0; ox < W; ox++) {
+      const X = x0 + (ox + .5) / k;
+      const w2 = Hi[2][0] * X + Hi[2][1] * Y + Hi[2][2];
+      const ix = Math.round((Hi[0][0] * X + Hi[0][1] * Y + Hi[0][2]) / w2), iy = Math.round((Hi[1][0] * X + Hi[1][1] * Y + Hi[1][2]) / w2);
+      const o4 = (oy * W + ox) * 4;
+      if (ix >= 0 && ix < pw && iy >= 0 && iy < ph) {
+        const s4 = (iy * pw + ix) * 4;
+        od[o4] = sd[s4]; od[o4 + 1] = sd[s4 + 1]; od[o4 + 2] = sd[s4 + 2]; od[o4 + 3] = 255;
+      } else { od[o4] = od[o4 + 1] = od[o4 + 2] = 245; od[o4 + 3] = 255; }
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  return { canvas: out, k, x0, y0 };
+}
+function overlayPolygon(canvas, Pmm, tr, res) {
+  const x = canvas.getContext("2d");
+  const pts = Pmm.map(p => tr(p));
+  x.lineWidth = Math.max(3, canvas.width / 300); x.strokeStyle = "#0d9488"; x.lineJoin = "round";
+  x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath();
+  x.fillStyle = "#14b8a633"; x.fill(); x.stroke();
+  const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+  const fs = Math.max(16, canvas.width / 34);
+  x.font = "bold " + fs + "px system-ui"; x.textAlign = "center"; x.textBaseline = "middle";
+  pts.forEach((p, i) => {
+    x.beginPath(); x.arc(p[0], p[1], fs * .55, 0, 7); x.fillStyle = "#0f766e"; x.fill(); x.lineWidth = 2; x.strokeStyle = "#fff"; x.stroke();
+    x.fillStyle = "#fff"; x.fillText(String(i + 1), p[0], p[1] + 1);
+  });
+  if (res) pts.forEach((p, i) => {
+    const q = pts[(i + 1) % pts.length], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+    const vx = mx - cx, vy = my - cy, vl = Math.hypot(vx, vy) || 1;
+    const tx = mx + vx / vl * fs * 1.2, ty = my + vy / vl * fs * 1.2, t = fmtLen(res.lengthsMm[i]);
+    x.font = "bold " + fs * .8 + "px system-ui";
+    x.lineWidth = 5; x.strokeStyle = "#000a"; x.strokeText(t, tx, ty); x.fillStyle = "#fff"; x.fillText(t, tx, ty);
+  });
+}
+function makePhotoView(root, pts, maxPts, color, onChange) {
+  const cv = document.createElement("canvas"); cv.className = "pvc"; root.appendChild(cv);
+  const loupe = document.createElement("canvas"); loupe.width = loupe.height = 280; loupe.className = "loupe"; root.appendChild(loupe);
+  const ctx = cv.getContext("2d"), lctx = loupe.getContext("2d");
+  const img = PM.imgCanvas, dpr = Math.min(devicePixelRatio || 1, 2.5);
+  let scale = 1, tx = 0, ty = 0;
+  function fit() {
+    const r = root.getBoundingClientRect();
+    cv.width = Math.max(2, r.width * dpr); cv.height = Math.max(2, r.height * dpr);
+    scale = Math.min(cv.width / img.width, cv.height / img.height);
+    tx = (cv.width - img.width * scale) / 2; ty = (cv.height - img.height * scale) / 2;
+    draw();
+  }
+  const toImg = (cx, cy) => { const r = cv.getBoundingClientRect(); return [( (cx - r.left) * dpr - tx) / scale, ((cy - r.top) * dpr - ty) / scale]; };
+  const toCss = p => [(p[0] * scale + tx) / dpr, (p[1] * scale + ty) / dpr];
+  const clampP = p => [Math.min(Math.max(p[0], 0), img.width), Math.min(Math.max(p[1], 0), img.height)];
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.setTransform(scale, 0, 0, scale, tx, ty);
+    ctx.drawImage(img, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const dp = pts.map(p => [(p[0] * scale + tx), (p[1] * scale + ty)]);
+    if (dp.length > 1) {
+      ctx.beginPath(); dp.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+      const closed = maxPts !== 2 && dp.length >= 3;
+      if (closed) ctx.closePath();
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5 * dpr; ctx.stroke();
+      if (closed) { ctx.fillStyle = color + "33"; ctx.fill(); }
+    }
+    dp.forEach((p, i) => {
+      ctx.beginPath(); ctx.arc(p[0], p[1], 9 * dpr, 0, 7); ctx.fillStyle = color; ctx.fill();
+      ctx.lineWidth = 2 * dpr; ctx.strokeStyle = "#fff"; ctx.stroke();
+      ctx.fillStyle = "#fff"; ctx.font = "bold " + 11 * dpr + "px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(String(i + 1), p[0], p[1] + dpr);
+    });
+  }
+  function loupeAt(cx, cy) {
+    const r = root.getBoundingClientRect(), fx = cx - r.left, fy = cy - r.top;
+    const [ix, iy] = toImg(cx, cy);
+    const R0 = 45 / scale; // img px radius
+    lctx.fillStyle = "#000"; lctx.fillRect(0, 0, 280, 280);
+    const sx = Math.min(Math.max(ix - R0, 0), Math.max(img.width - 2 * R0, 0)), sy = Math.min(Math.max(iy - R0, 0), Math.max(img.height - 2 * R0, 0));
+    if (2 * R0 <= img.width && 2 * R0 <= img.height) lctx.drawImage(img, sx, sy, 2 * R0, 2 * R0, 0, 0, 280, 280);
+    loupe.style.display = "block";
+    loupe.style.left = Math.min(Math.max(fx - 70, 4), r.width - 144) + "px";
+    loupe.style.top = Math.max(fy - 185, 4) + "px";
+  }
+  const active = new Map(); let dragIdx = -1, downAt = 0, moved = false, pinch = null, downX = 0, downY = 0;
+  cv.addEventListener("pointerdown", e => {
+    cv.setPointerCapture(e.pointerId);
+    active.set(e.pointerId, [e.clientX, e.clientY]);
+    if (active.size === 1) {
+      downAt = Date.now(); moved = false; dragIdx = -1; downX = e.clientX; downY = e.clientY;
+      const r = cv.getBoundingClientRect();
+      pts.forEach((p, i) => { const s = toCss(p); if (Math.hypot(s[0] - (e.clientX - r.left), s[1] - (e.clientY - r.top)) < 30) dragIdx = i; });
+      loupeAt(e.clientX, e.clientY);
+    } else if (active.size === 2) {
+      loupe.style.display = "none"; dragIdx = -1;
+      const a = [...active.values()];
+      pinch = { d: Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) || 1, c: [(a[0][0] + a[1][0]) / 2, (a[0][1] + a[1][1]) / 2], scale, tx, ty, rect: cv.getBoundingClientRect() };
+    }
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!active.has(e.pointerId)) return;
+    const prev = active.get(e.pointerId);
+    active.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pinch && active.size >= 2) {
+      const a = [...active.values()];
+      const d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) || 1, c = [(a[0][0] + a[1][0]) / 2, (a[0][1] + a[1][1]) / 2];
+      const ns = Math.min(Math.max(pinch.scale * d / pinch.d, cv.width / img.width / 2), 30 * cv.width / img.width);
+      const px = (pinch.c[0] - pinch.rect.left) * dpr, py = (pinch.c[1] - pinch.rect.top) * dpr;
+      const ix = (px - pinch.tx) / pinch.scale, iy = (py - pinch.ty) / pinch.scale;
+      scale = ns; tx = px - ix * ns + (c[0] - pinch.c[0]) * dpr; ty = py - iy * ns + (c[1] - pinch.c[1]) * dpr;
+      draw(); return;
+    }
+    if (active.size === 1) {
+      if (dragIdx >= 0) { pts[dragIdx] = clampP(toImg(e.clientX, e.clientY)); onChange(); draw(); }
+      else {
+        if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 10) moved = true;
+        if (moved) { tx += (e.clientX - prev[0]) * dpr; ty += (e.clientY - prev[1]) * dpr; draw(); }
+      }
+      loupeAt(e.clientX, e.clientY);
+    }
+  });
+  const up = e => {
+    if (!active.has(e.pointerId)) return;
+    active.delete(e.pointerId);
+    loupe.style.display = "none";
+    if (active.size < 2) pinch = null;
+    if (active.size === 0 && dragIdx < 0 && !moved && Date.now() - downAt < 500 && pts.length < maxPts) {
+      pts.push(clampP(toImg(e.clientX, e.clientY))); onChange(); draw();
+    }
+    dragIdx = -1;
+  };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  fit();
+  return { redraw: draw, fit };
+}
+function pmCompute() {
+  const imgDiag = Math.hypot(PM.imgCanvas.width, PM.imgCanvas.height);
+  const opts = { imgDiagPx: imgDiag, blurVar: PM.blurVar };
+  if (PM.refType === "a4") PM.result = LandCore.photoQuad(PM.refPts, PM.plotPts, opts);
+  else PM.result = LandCore.photoLine(PM.refPts, PM.refType === "card" ? 85.6 : PM.customLen * 10, PM.plotPts, opts);
+  PM.preview = null;
+  if (PM.result && PM.result.ok) {
+    if (PM.result.mode === "quad") {
+      const w = warpRect(PM.imgCanvas, PM.result);
+      overlayPolygon(w.canvas, PM.result.plotMm, p => [(p[0] - w.x0) * w.k, (p[1] - w.y0) * w.k], PM.result);
+      PM.preview = w.canvas;
+    } else {
+      const s = PM.result.scaleMmPerPx, k = Math.min(1200 / PM.imgCanvas.width, 900 / PM.imgCanvas.height, 2);
+      const c = document.createElement("canvas"); c.width = Math.round(PM.imgCanvas.width * k); c.height = Math.round(PM.imgCanvas.height * k);
+      c.getContext("2d").drawImage(PM.imgCanvas, 0, 0, c.width, c.height);
+      overlayPolygon(c, PM.result.plotMm, p => [p[0] / s * k, p[1] / s * k], PM.result);
+      PM.preview = c;
+    }
+  }
+}
+function pmQualityBlock(res) {
+  let h = `<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><span class="qbadge ${res.quality}">جودة ${QT[res.quality]}</span><small>الأطوال ±${fmtLen(res.lenSigmaMm)} · المساحة ±${fmtAreaSmall(res.areaSigmaM2)}</small></div>`;
+  res.checks.filter(c => c.level !== "good").forEach(c => { h += `<div class="chk ${c.level === "bad" ? "bad" : c.id === "lineRef" ? "info" : "mid"}">${CHKTXT[c.id](c)}</div>`; });
+  h += `<div class="chk info">المرجع والمساحة لازم يكونوا على نفس السطح المستوي، والصورة الأصلية (مش سكرين شوت أو صورة واتساب).</div>`;
+  return h;
+}
+function pmRender() {
+  const b = $("pmbody"), n = 6;
+  $("pmstep").textContent = "خطوة " + PM.step + " من " + n;
+  $("pmback").style.visibility = PM.step > 1 && PM.step < 6 ? "visible" : "hidden";
+  const next = $("pmnext");
+  next.disabled = false;
+  if (PM.step === 1) {
+    next.style.display = "none";
+    b.innerHTML = `<div class="card"><h2>١) صوّر المساحة</h2>
+      <p class="hint">حط ورقة A4 (أفضل) أو كارت بنك على نفس سطح اللي هتقيسه، وصوّر من أعلى مباشرة والموبايل موازي للأرض. الإضاءة تكون كويسة والصورة حادة.</p>
+      <button class="bigbtn" id="pmshoot">📷 التقط صورة<span>تفتح الكاميرا</span></button>
+      <button class="bigbtn" id="pmpick">🖼 اختر من الاستوديو<span>صورة موجودة عندك</span></button></div>`;
+    $("pmshoot").onclick = () => $("pmcam").click();
+    $("pmpick").onclick = () => $("pmgal").click();
+  } else if (PM.step === 2) {
+    next.style.display = ""; next.textContent = "التالي";
+    const R = REFS[PM.refType];
+    b.innerHTML = `<div class="pvwrap"><div class="card" style="margin-bottom:8px"><h2>٢) حدد المرجع</h2>
+      <div class="refchips">${Object.entries(REFS).map(([k, r]) => `<button data-rt="${k}" class="${k === PM.refType ? "on" : ""}">${r.label}</button>`).join("")}</div>
+      ${PM.refType === "custom" ? `<div class="f" style="margin-bottom:8px"><label>طول المرجع بالسم</label><input id="pmcust" type="number" inputmode="decimal" step="0.1" value="${PM.customLen}"></div>` : ""}
+      <p class="hint" style="margin:0">${R.hint}. اسحب أي نقطة لتعديلها، وكبّر بإصبعين.</p></div>
+      <div class="pv" id="pvv"></div><div class="pmini"><span>النقاط: <b id="pmcnt">${PM.refPts.length}/${R.n}</b></span><button class="sbtn x" id="pmclear">مسح النقاط</button></div></div>`;
+    b.querySelectorAll("[data-rt]").forEach(btn => btn.onclick = () => { PM.refType = btn.dataset.rt; PM.refPts = []; pmRender(); });
+    const ci = $("pmcust"); if (ci) ci.oninput = () => { PM.customLen = +ci.value > 0 ? +ci.value : 10; };
+    makePhotoView($("pvv"), PM.refPts, R.n, "#f59e0b", () => {
+      $("pmcnt").textContent = PM.refPts.length + "/" + R.n;
+      $("pmnext").disabled = PM.refPts.length < R.n;
+    });
+    $("pmclear").onclick = () => { PM.refPts.length = 0; pmRender(); };
+    next.disabled = PM.refPts.length < R.n;
+  } else if (PM.step === 3) {
+    next.style.display = ""; next.textContent = "التالي";
+    b.innerHTML = `<div class="pvwrap"><div class="card" style="margin-bottom:8px"><h2>٣) حدد زوايا المساحة</h2>
+      <p class="hint" style="margin:0">دوس على كل ركن بالترتيب (٣ أركان على الأقل). اسحب أي نقطة لتعديلها، وكبّر بإصبعين.</p></div>
+      <div class="pv" id="pvv"></div><div class="pmini"><span>النقاط: <b id="pmcnt">${PM.plotPts.length}</b></span><span><button class="sbtn x" id="pmundo">تراجع</button> <button class="sbtn x" id="pmclear">مسح</button></span></div></div>`;
+    makePhotoView($("pvv"), PM.plotPts, 24, "#14b8a6", () => {
+      $("pmcnt").textContent = PM.plotPts.length;
+      $("pmnext").disabled = PM.plotPts.length < 3;
+    });
+    $("pmundo").onclick = () => { PM.plotPts.pop(); pmRender(); };
+    $("pmclear").onclick = () => { PM.plotPts.length = 0; pmRender(); };
+    next.disabled = PM.plotPts.length < 3;
+  } else if (PM.step === 4) {
+    next.style.display = ""; next.textContent = "عرض النتيجة";
+    const res = PM.result;
+    if (!res || !res.ok) { b.innerHTML = `<div class="note bad">حصل خطأ في الحساب. راجع نقاط المرجع والمساحة.</div>`; next.disabled = true; return; }
+    b.innerHTML = `<div class="card"><h2>٤) مراجعة ${res.mode === "quad" ? "وتصحيح المنظور" : ""}</h2><div id="pmprev"></div>${pmQualityBlock(res)}</div>`;
+    PM.preview.className = "ppreview"; $("pmprev").appendChild(PM.preview);
+  } else if (PM.step === 5) {
+    next.style.display = ""; next.textContent = "حفظ ومشاركة";
+    const res = PM.result;
+    const a = res.areaM2, fa = LandCore.formatArea(a);
+    let rows = "";
+    res.lengthsMm.forEach((l, i) => { rows += `<tr><td>${fmtLen(l)}</td><td>${i + 1} ← ${(i + 1) % res.lengthsMm.length + 1}</td></tr>`; });
+    b.innerHTML = `<div class="card hero"><div class="lbl">المساحة · قياس بالصورة</div><div class="big">${fmtAreaSmall(a)}</div>
+      <div class="sm">${fa.feddan || fa.qirat ? fa.feddan + " فدان، " + fa.qirat + " قيراط، " + fa.sahm.toFixed(1) + " سهم · " : ""}${(a / LandCore.FEDDAN).toFixed(5)} فدان</div>
+      <div class="stats"><div class="stat">المحيط<b>${fmtLen(res.perimeterMm)}</b></div><div class="stat">الجودة<b>${QT[res.quality]}</b></div></div></div>
+      <div class="card"><h2>الأضلاع</h2><table class="tbl"><tr><th>الطول</th><th>الضلع</th></tr>${rows}</table></div>
+      ${pmQualityBlock(res)}`;
+  } else if (PM.step === 6) {
+    next.style.display = ""; next.textContent = "قياس جديد";
+    b.innerHTML = `<div class="card"><h2>٦) احفظ أو شارك الرسم</h2><div id="pmprev"></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="sbtn" id="pmshare" style="flex:1;padding:12px">مشاركة</button><button class="sbtn x" id="pmdl" style="flex:1;padding:12px">تحميل PNG</button></div></div>`;
+    const sk = buildSketch(); sk.className = "ppreview"; $("pmprev").appendChild(sk);
+    const blob = cb => sk.toBlob(cb, "image/png");
+    $("pmshare").onclick = () => blob(bl => {
+      const f = new File([bl], "qiyas.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(() => {});
+      else { const u = URL.createObjectURL(bl); const a = document.createElement("a"); a.href = u; a.download = "qiyas.png"; a.click(); }
+    });
+    $("pmdl").onclick = () => blob(bl => { const u = URL.createObjectURL(bl); const a = document.createElement("a"); a.href = u; a.download = "qiyas.png"; a.click(); });
+  }
+}
+function buildSketch() {
+  const res = PM.result, bar = 84;
+  const c = document.createElement("canvas");
+  c.width = PM.preview.width; c.height = PM.preview.height + bar;
+  const x = c.getContext("2d");
+  x.drawImage(PM.preview, 0, 0);
+  x.fillStyle = "#0f766e"; x.fillRect(0, c.height - bar, c.width, bar);
+  x.fillStyle = "#fff"; x.textAlign = "center";
+  x.font = "bold 30px system-ui";
+  x.fillText("المساحة: " + fmtAreaSmall(res.areaM2) + "  ·  المحيط: " + fmtLen(res.perimeterMm), c.width / 2, c.height - bar + 34);
+  x.font = "20px system-ui";
+  x.fillText("الجودة: " + QT[res.quality] + "  ·  تطبيق قياس الأرض", c.width / 2, c.height - bar + 64);
+  return c;
+}
+$("pmopen").onclick = () => {
+  Object.assign(PM, { step: 1, imgCanvas: null, blurVar: NaN, refType: "a4", refPts: [], plotPts: [], result: null, preview: null });
+  $("pm").classList.add("on"); pmRender();
+};
+$("pmclose").onclick = () => $("pm").classList.remove("on");
+$("pmback").onclick = () => { if (PM.step > 1) { PM.step--; pmRender(); } };
+$("pmnext").onclick = () => {
+  if (PM.step === 3) pmCompute();
+  if (PM.step === 6) { Object.assign(PM, { step: 1, imgCanvas: null, refPts: [], plotPts: [], result: null, preview: null }); pmRender(); return; }
+  if (PM.step < 6) { PM.step++; pmRender(); }
+};
+function pmLoad(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => {
+    const k = Math.min(1, 2200 / Math.max(im.width, im.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    PM.imgCanvas = c; PM.blurVar = blurVariance(c);
+    PM.refPts = []; PM.plotPts = []; PM.result = null; PM.preview = null;
+    PM.step = 2; pmRender();
+  };
+  im.onerror = () => alert("تعذر فتح الصورة");
+  im.src = url;
+}
+$("pmcam").onchange = e => { pmLoad(e.target.files[0]); e.target.value = ""; };
+$("pmgal").onchange = e => { pmLoad(e.target.files[0]); e.target.value = ""; };
+
+/* demo hook for automated screenshots (#demo-photo) */
+if (location.hash === "#demo-photo") {
+  const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
+  const x = c.getContext("2d");
+  x.fillStyle = "#8d6e63"; x.fillRect(0, 0, 1500, 2000);
+  x.fillStyle = "#fff"; x.fillRect(200, 150, 630, 891); // A4 at 3px/mm
+  x.strokeStyle = "#333"; x.strokeRect(200, 150, 630, 891);
+  x.fillStyle = "#4caf50"; x.fillRect(260, 270, 300, 150); // plot 100x50 mm
+  x.strokeStyle = "#1b5e20"; x.lineWidth = 4; x.strokeRect(260, 270, 300, 150);
+  PM.imgCanvas = c; PM.blurVar = 300; PM.refType = "a4";
+  PM.refPts = [[200, 150], [830, 150], [830, 1041], [200, 1041]];
+  PM.plotPts = [[260, 270], [560, 270], [560, 420], [260, 420]];
+  pmCompute(); PM.step = 5;
+  $("pm").classList.add("on"); pmRender();
+}
+if (location.hash === "#demo-step1") { PM.step = 1; $("pm").classList.add("on"); pmRender(); }
+if (location.hash === "#demo-step2") { /* needs photo; reuse demo photo */
+  const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
+  const x = c.getContext("2d");
+  x.fillStyle = "#8d6e63"; x.fillRect(0, 0, 1500, 2000);
+  x.fillStyle = "#fff"; x.fillRect(200, 150, 630, 891); x.strokeStyle = "#333"; x.strokeRect(200, 150, 630, 891);
+  x.fillStyle = "#4caf50"; x.fillRect(260, 270, 300, 150); x.strokeStyle = "#1b5e20"; x.lineWidth = 4; x.strokeRect(260, 270, 300, 150);
+  PM.imgCanvas = c; PM.blurVar = 300; PM.step = 2; $("pm").classList.add("on"); pmRender();
+}
+if (location.hash === "#demo-dark") { state.theme = "dark"; save(); applyTheme(); }
+if (location.hash === "#demo-photo4" || location.hash === "#demo-photo6") {
+  const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
+  const x = c.getContext("2d");
+  x.fillStyle = "#8d6e63"; x.fillRect(0, 0, 1500, 2000);
+  x.fillStyle = "#fff"; x.fillRect(200, 150, 630, 891); x.strokeStyle = "#333"; x.strokeRect(200, 150, 630, 891);
+  x.fillStyle = "#4caf50"; x.fillRect(260, 270, 300, 150); x.strokeStyle = "#1b5e20"; x.lineWidth = 4; x.strokeRect(260, 270, 300, 150);
+  PM.imgCanvas = c; PM.blurVar = 300; PM.refType = "a4";
+  PM.refPts = [[200, 150], [830, 150], [830, 1041], [200, 1041]];
+  PM.plotPts = [[260, 270], [560, 270], [560, 420], [260, 420]];
+  pmCompute(); PM.step = location.hash === "#demo-photo4" ? 4 : 6;
+  $("pm").classList.add("on"); pmRender();
 }
 
 /* ---------- results ---------- */
