@@ -292,6 +292,132 @@
     return out;
   }
 
-  const api = { solveCombined, llToLocal, averageFixes, solve, area, formatArea, FEDDAN, QIRAT, SAHM };
+  // ---------- v3: photo precision mode (reference object in the plane) ----------
+  function convexQuad(P) {
+    if (P.length !== 4) return false;
+    let s = 0;
+    for (let i = 0; i < 4; i++) {
+      const a = P[i], b = P[(i + 1) % 4], c = P[(i + 2) % 4];
+      const cr = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+      if (Math.abs(cr) < 1e-9) return false;
+      const sg = cr > 0 ? 1 : -1;
+      if (s === 0) s = sg; else if (sg !== s) return false;
+    }
+    return true;
+  }
+  // DLT homography: 4 src points -> 4 dst points. Returns 3x3 row-major (h33=1).
+  function homography(src, dst) {
+    const A = [], b = [];
+    for (let k = 0; k < 4; k++) {
+      const [x, y] = src[k], [X, Y] = dst[k];
+      A.push([x, y, 1, 0, 0, 0, -X * x, -X * y]); b.push(X);
+      A.push([0, 0, 0, x, y, 1, -Y * x, -Y * y]); b.push(Y);
+    }
+    const h = solveLinear(A, b);
+    if (!h) return null;
+    return [[h[0], h[1], h[2]], [h[3], h[4], h[5]], [h[6], h[7], 1]];
+  }
+  function applyH(H, p) {
+    const w = H[2][0] * p[0] + H[2][1] * p[1] + H[2][2];
+    return [(H[0][0] * p[0] + H[0][1] * p[1] + H[0][2]) / w, (H[1][0] * p[0] + H[1][1] * p[1] + H[1][2]) / w];
+  }
+  function polyStats(P) {
+    const n = P.length, lengths = [];
+    let per = 0;
+    for (let i = 0; i < n; i++) { const d = dist(P, i, (i + 1) % n); lengths.push(d); per += d; }
+    return { lengths, perimeter: per, area: area(P), simple: !selfIntersects(P) };
+  }
+  // area sigma from per-vertex isotropic sigma (same units), polygon in any unit
+  function areaSigma(P, s) {
+    const n = P.length; let v = 0;
+    for (let i = 0; i < n; i++) {
+      const nx = P[(i + 1) % n], pv = P[(i + n - 1) % n];
+      const gx = (nx[1] - pv[1]) / 2, gy = (pv[0] - nx[0]) / 2;
+      v += (gx * gx + gy * gy) * s * s;
+    }
+    return Math.sqrt(v);
+  }
+  const worse = (a, b) => ({ good: 0, mid: 1, bad: 2 })[a] >= ({ good: 0, mid: 1, bad: 2 })[b] ? a : b;
+  // Shared quality machinery. opts: {imgDiagPx, blurVar}
+  function qualityChecks(refDiagPx, perspRatio, opts) {
+    const checks = [];
+    let q = "good";
+    if (opts.imgDiagPx) {
+      const frac = refDiagPx / opts.imgDiagPx;
+      const lvl = frac >= 0.25 ? "good" : frac >= 0.12 ? "mid" : "bad";
+      checks.push({ id: "refsize", level: lvl, value: frac }); q = worse(q, lvl);
+    }
+    if (perspRatio) {
+      const lvl = perspRatio <= 1.2 ? "good" : perspRatio <= 1.6 ? "mid" : "bad";
+      checks.push({ id: "persp", level: lvl, value: perspRatio }); q = worse(q, lvl);
+    }
+    if (isFinite(opts.blurVar)) {
+      const lvl = opts.blurVar >= 80 ? "good" : opts.blurVar >= 25 ? "mid" : "bad";
+      checks.push({ id: "blur", level: lvl, value: opts.blurVar }); q = worse(q, lvl);
+    }
+    return { q, checks };
+  }
+  const tapSigmaPx = blurVar => !isFinite(blurVar) ? 2.5 : blurVar >= 80 ? 2 : blurVar >= 25 ? 3.5 : 6;
+  // 4-corner rectangular reference (A4 etc). refPx: 4 tapped corners IN ORDER.
+  // refW/refH mm (A4: 210/297; orientation auto-matched to the tapped quad).
+  function photoQuad(refPx, plotPx, opts) {
+    opts = opts || {};
+    const refW = opts.refW || 210, refH = opts.refH || 297;
+    if (!convexQuad(refPx)) return { error: "ref_not_convex" };
+    if (plotPx.length < 3) return { error: "need_3_points" };
+    const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const s0 = d(refPx[0], refPx[1]), s1 = d(refPx[1], refPx[2]), s2 = d(refPx[2], refPx[3]), s3 = d(refPx[3], refPx[0]);
+    const longFirst = (s0 + s2) >= (s1 + s3);
+    const W = longFirst ? Math.max(refW, refH) : Math.min(refW, refH);
+    const Ht = longFirst ? Math.min(refW, refH) : Math.max(refW, refH);
+    const H = homography(refPx, [[0, 0], [W, 0], [W, Ht], [0, Ht]]);
+    if (!H) return { error: "homography_failed" };
+    const P = plotPx.map(p => applyH(H, p));
+    const st = polyStats(P);
+    const persp = Math.max(s0 / s2, s2 / s0, s1 / s3, s3 / s1);
+    const refDiagPx = d(refPx[0], refPx[2]);
+    const { q, checks } = qualityChecks(refDiagPx, persp, opts);
+    if (!st.simple) { checks.push({ id: "selfx", level: "bad", value: 1 }); }
+    const quality = st.simple ? q : "bad";
+    // mean local scale mm/px along the reference sides
+    const scale = ((W / s0) + (Ht / s1) + (W / s2) + (Ht / s3)) / 4;
+    const tsp = tapSigmaPx(opts.blurVar);
+    const sigmaPtMm = tsp * scale;
+    const out = {
+      ok: true, mode: "quad", H, rectW: W, rectH: Ht, scaleMmPerPx: scale,
+      lengthsMm: st.lengths, perimeterMm: st.perimeter, areaMm2: st.area,
+      areaM2: st.area / 1e6, simple: st.simple, quality, checks,
+      lenSigmaMm: sigmaPtMm * Math.SQRT2, areaSigmaM2: areaSigma(P, sigmaPtMm) / 1e6,
+      plotMm: P, perspRatio: persp
+    };
+    return out;
+  }
+  // 2-point reference (card long side, coin diameter, custom length). No perspective correction.
+  function photoLine(refPx, refLenMm, plotPx, opts) {
+    opts = opts || {};
+    if (plotPx.length < 3) return { error: "need_3_points" };
+    const dpx = Math.hypot(refPx[0][0] - refPx[1][0], refPx[0][1] - refPx[1][1]);
+    if (dpx < 5) return { error: "ref_too_small" };
+    const scale = refLenMm / dpx; // mm per px
+    const P = plotPx.map(p => [p[0] * scale, p[1] * scale]);
+    const st = polyStats(P);
+    const { q, checks } = qualityChecks(dpx, null, opts);
+    checks.push({ id: "lineRef", level: "mid", value: 0 }); // no tilt correction possible
+    if (!st.simple) checks.push({ id: "selfx", level: "bad", value: 1 });
+    let quality = st.simple ? q : "bad";
+    if (quality === "good") quality = "mid"; // line reference can never be top grade
+    const tsp = tapSigmaPx(opts.blurVar);
+    const sigmaPtMm = tsp * scale;
+    return {
+      ok: true, mode: "line", scaleMmPerPx: scale,
+      lengthsMm: st.lengths, perimeterMm: st.perimeter, areaMm2: st.area,
+      areaM2: st.area / 1e6, simple: st.simple, quality, checks,
+      lenSigmaMm: sigmaPtMm * Math.SQRT2, areaSigmaM2: areaSigma(P, sigmaPtMm) / 1e6,
+      plotMm: P, perspRatio: null
+    };
+  }
+
+  const api = { solveCombined, llToLocal, averageFixes, solve, area, formatArea, FEDDAN, QIRAT, SAHM,
+    homography, applyH, photoQuad, photoLine, convexQuad };
   if (typeof module !== "undefined") module.exports = api; else root.LandCore = api;
 })(typeof self !== "undefined" ? self : this);
